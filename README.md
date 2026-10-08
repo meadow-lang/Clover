@@ -1,6 +1,6 @@
 # clover
 
-Property-based testing for [Meadow](https://github.com/mcdearman/meadow). You
+Property-based testing for [Meadow](https://github.com/meadow-lang/meadow). You
 state a property, and it is checked on many random inputs. If an input breaks
 it, that input is shrunk to a small one that still does.
 
@@ -12,7 +12,7 @@ crate's words.
 ## Install
 
 ```sh
-meadow add mcdearman/Clover
+meadow add meadow-lang/Clover
 ```
 
 ## Use
