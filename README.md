@@ -9,6 +9,14 @@ This package is a port of Rust's
 failing inputs exactly as the crate does, and it reports failures in the
 crate's words.
 
+## AI disclosure
+
+Clover is written with AI coding agents: Anthropic's Claude, through Claude
+Code. Most of the code, the tests, the documentation and the commit messages in
+this repository were written by an agent, under the direction of the project's
+author, who decides the design and what goes in. Read it, and rely on it, with
+that in mind.
+
 ## Install
 
 ```sh
