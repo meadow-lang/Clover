@@ -9,7 +9,7 @@
 -- port's authors. Dual-licensed under MIT or the Unlicense: see COPYRIGHT.
 
 use Std.Collections.Vector as V
-use Std.Random (nextInt, intBetween, nextFloat)
+use Std.Random (Random, nextInt, intBetween, nextFloat)
 use Std.Num (minInt8, maxInt8, minInt16, maxInt16, minInt32, maxInt32, minInt, maxInt)
 use Std.Num (maxUInt8, maxUInt16, maxUInt32, maxUInt64)
 use Clover.Shrinks

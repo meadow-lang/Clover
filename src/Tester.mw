@@ -10,6 +10,7 @@
 
 use Std.Collections.Vector as V
 use Std.String as S
+use Std.Random (Random)
 use Std.Test (fail)
 use Clover.Shrinks
 use Clover.Arbitrary (Gen, Arbitrary, gen, tuple2, tuple3)
