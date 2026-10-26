@@ -19,8 +19,7 @@ use Std.Collections.Vector as V
     match V.get xs k with
     | Just x -> Shrinks.More x (\() -> from (k + 1))
     | None -> Shrinks.Done
-  in
-  from 0
+  in from 0
 
 -- `f` of each value.
 @pub fun mapShrinks f s =
@@ -55,5 +54,4 @@ use Std.Collections.Vector as V
     match t with
     | Shrinks.Done -> acc
     | Shrinks.More x rest -> go (rest ()) (V.pushBack acc x)
-  in
-  go s V.empty
+  in go s V.empty

@@ -18,7 +18,11 @@ use Clover.Arbitrary (Gen, Arbitrary, gen, tuple2, tuple3)
 
 -- What one test came to: its status, the arguments it was given, and an
 -- error message, if it failed with one.
-@pub record TestResult = { status : Status, arguments : [String], err : Maybe String }
+@pub record TestResult = {
+  status : Status,
+  arguments : [String],
+  err : Maybe String
+}
 
 @pub fun fromBool b =
   TestResult { status = if b then Status.Pass else Status.Fail, arguments = [], err = None }
@@ -39,10 +43,7 @@ use Clover.Arbitrary (Gen, Arbitrary, gen, tuple2, tuple3)
   | Ok (t : TestResult) -> t
   | Err e -> error (display e)
 
-@pub fun isFailure (r : TestResult) =
-  match r.status with
-  | Status.Fail -> True
-  | _ -> False
+@pub fun isFailure (r : TestResult) = match r.status with | Status.Fail -> True | _ -> False
 
 @pub fun isError (r : TestResult) = isFailure r and r.err != None
 
@@ -51,12 +52,15 @@ use Clover.Arbitrary (Gen, Arbitrary, gen, tuple2, tuple3)
   let arguments = S.join ", " r.arguments in
   match r.err with
   | None -> "[quickcheck] TEST FAILED. Arguments: (${arguments})"
-  | Just message -> "[quickcheck] TEST FAILED (runtime error). Arguments: (${arguments})\nError: ${message}"
+  | Just message ->
+      "[quickcheck] TEST FAILED (runtime error). Arguments: (${arguments})\nError: ${message}"
 
 -- --- properties --------------------------------------------------------------------------
 
 -- A test to run many times: given a generator, one result.
-@pub record Property = { run : Gen -> TestResult ! Random }
+@pub record Property = {
+  run : Gen -> TestResult ! Random
+}
 
 fun withArguments shown (r : TestResult) = { r | arguments = shown }
 
@@ -74,15 +78,16 @@ fun shrinkFailure (a : Arbitrary x) test show value =
 -- as the crate lists arguments.
 @pub fun forAllShown (a : Arbitrary x) show test =
   Property {
-    run = \g ->
-      let value = a.arbitrary g in
-      let r = withArguments (show value) (test value) in
-      match r.status with
-      | Status.Fail ->
-          (match shrinkFailure a test show value with
-           | Just smaller -> smaller
-           | None -> r)
-      | _ -> r
+    run =
+      \g ->
+        let value = a.arbitrary g in
+        let r = withArguments (show value) (test value) in
+        match r.status with
+        | Status.Fail ->
+            (match shrinkFailure a test show value with
+             | Just smaller -> smaller
+             | None -> r)
+        | _ -> r
   }
 
 -- The property that `test` holds for values of `a`.
@@ -90,22 +95,27 @@ fun shrinkFailure (a : Arbitrary x) test show value =
 
 -- `forAll`, for a test of two arguments, listed separately when it fails.
 @pub fun forAll2 a b test =
-  forAllShown
-    (tuple2 a b)
-    (\t -> match t with | (x, y) -> [display x, display y])
-    (\t -> match t with | (x, y) -> test x y)
+  forAllShown (tuple2 a b) (\t -> match t with | (x, y) -> [display x, display y]) (\t ->
+    match t with | (x, y) -> test x y)
 
 -- `forAll`, for a test of three arguments.
 @pub fun forAll3 a b c test =
   forAllShown
     (tuple3 a b c)
-    (\t -> match t with | (x, y, z) -> [display x, display y, display z])
+    (\t ->
+      match t with
+      | (x, y, z) -> [display x, display y, display z])
     (\t -> match t with | (x, y, z) -> test x y z)
 
 -- --- running -----------------------------------------------------------------------------
 
 -- How many tests to run, and on what.
-@pub record QuickCheck = { tests : Int, maxTests : Int, minTestsPassed : Int, gen : Gen }
+@pub record QuickCheck = {
+  tests : Int,
+  maxTests : Int,
+  minTestsPassed : Int,
+  gen : Gen
+}
 
 fun envInt name fallback =
   match getEnv name with
@@ -140,16 +150,14 @@ fun envInt name fallback =
 -- passed, or the first failure, shrunk.
 @pub fun quicktest (q : QuickCheck) (p : Property) =
   let rec go tried passedSoFar =
-    if tried >= q.maxTests or passedSoFar >= q.tests
-    then Ok passedSoFar
+    if tried >= q.maxTests or passedSoFar >= q.tests then Ok passedSoFar
     else
       let (r : TestResult) = p.run q.gen in
       match r.status with
       | Status.Pass -> go (tried + 1) (passedSoFar + 1)
       | Status.Discard -> go (tried + 1) passedSoFar
       | Status.Fail -> Err r
-  in
-  go 0 0
+  in go 0 0
 
 -- `quicktest`, failing the current test with the crate's message if the
 -- property fails or too few tests could be run.
@@ -157,8 +165,7 @@ fun envInt name fallback =
   match quicktest q p with
   | Err r -> fail (failedMessage r)
   | Ok n ->
-      if n >= q.minTestsPassed
-      then ()
+      if n >= q.minTestsPassed then ()
       else fail "(Unable to generate enough tests, ${n} not discarded.)"
 
 -- `quickcheckWith` the defaults.

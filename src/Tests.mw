@@ -25,8 +25,9 @@ use Clover.Tester
 
 @cfg(test)
 fun num i n =
-  let rec go k acc = if k >= n then acc else go (k + 1) (acc * 64 + (toInt (stringByteAt cases (i + k)) - 48)) in
-  (go 0 0, i + n)
+  let rec go k acc =
+    if k >= n then acc else go (k + 1) (acc * 64 + (toInt (stringByteAt cases (i + k)) - 48))
+  in (go 0 0, i + n)
 
 @cfg(test)
 fun str i =
@@ -37,13 +38,11 @@ fun str i =
 fun strs i =
   let count = num i 3 in
   let rec go k at acc =
-    if k >= fst count
-    then (acc, at)
+    if k >= fst count then (acc, at)
     else
       match str at with
       | (s, next) -> go (k + 1) next (V.pushBack acc s)
-  in
-  go 0 (snd count) V.empty
+  in go 0 (snd count) V.empty
 
 -- A decimal integer, perhaps negative, as a `BigInt`.
 @cfg(test)
@@ -51,7 +50,9 @@ fun decimal s =
   let negative = S.startsWith "-" s in
   let digits = if negative then S.drop s 1 else s in
   let digitAt = \i -> toBigInt (toInt (stringByteAt digits i) - 48) in
-  let rec go i acc = if i >= stringByteLength digits then acc else go (i + 1) (acc * toBigInt 10 + digitAt i) in
+  let rec go i acc =
+    if i >= stringByteLength digits then acc else go (i + 1) (acc * toBigInt 10 + digitAt i)
+  in
   let n = go 0 (toBigInt 0) in
   if negative then toBigInt 0 - n else n
 
@@ -59,14 +60,12 @@ fun decimal s =
 @cfg(test)
 fun takeShrinks n s =
   let rec go k t acc =
-    if k >= n
-    then acc
+    if k >= n then acc
     else
       match t with
       | Shrinks.Done -> acc
       | Shrinks.More x rest -> go (k + 1) (rest ()) (V.pushBack acc x)
-  in
-  go 0 s V.empty
+  in go 0 s V.empty
 
 @cfg(test)
 fun shrinkOf (a : Arbitrary x) value = a.shrink value
@@ -91,8 +90,7 @@ fun intCase i =
     | 5 -> shown show uint16 (toUInt16 n)
     | 6 -> shown show uint32 (toUInt32 n)
     | _ -> shown show uint64 (toUInt64 n)
-  in
-  (fst input, fst expected, got, snd expected)
+  in (fst input, fst expected, got, snd expected)
 
 -- `m * 2^e`, by doubling or halving, as the generator builds it.
 @cfg(test)
@@ -113,8 +111,7 @@ fun floatCase i =
   let m = toInt (decimal (fst mantissa)) in
   let e = toInt (decimal (fst exponent)) in
   let got =
-    if fst double == 1
-    then
+    if fst double == 1 then
       let magnitude = build 2.0 0.5 (toFloat m) e in
       let f =
         match fst special with
@@ -123,8 +120,7 @@ fun floatCase i =
         | 3 -> 0.0 -. (1.0 /. 0.0)
         | 4 -> 0.0 -. 0.0
         | _ -> if fst negative == 1 then 0.0 -. magnitude else magnitude
-      in
-      V.pushFront (shown (\x -> show (truncateToInt x)) float f) (show (truncateToInt f))
+      in V.pushFront (shown (\x -> show (truncateToInt x)) float f) (show (truncateToInt f))
     else
       let one = toFloat32 1.0 in
       let zero = toFloat32 0.0 in
@@ -136,10 +132,13 @@ fun floatCase i =
         | 3 -> zero -. (one /. zero)
         | 4 -> zero -. zero
         | _ -> if fst negative == 1 then zero -. magnitude else magnitude
-      in
-      V.pushFront (shown (\x -> show (truncateToInt32 x)) float32 f) (show (truncateToInt32 f))
-  in
-  ("${fst double} ${fst special} ${fst mantissa} ${fst exponent}", fst expected, got, snd expected)
+      in V.pushFront (shown (\x -> show (truncateToInt32 x)) float32 f) (show (truncateToInt32 f))
+  in (
+       "${fst double} ${fst special} ${fst mantissa} ${fst exponent}",
+       fst expected,
+       got,
+       snd expected
+     )
 
 -- Kind 2: characters.
 @cfg(test)
@@ -174,10 +173,7 @@ fun stringCase i =
 fun boolText b = if b then "true" else "false"
 
 @cfg(test)
-fun showMaybe m =
-  match m with
-  | Just n -> "some ${n}"
-  | None -> "none"
+fun showMaybe m = match m with | Just n -> "some ${n}" | None -> "none"
 
 @cfg(test)
 fun showResult r =
@@ -186,9 +182,7 @@ fun showResult r =
   | Err e -> "err ${boolText e}"
 
 @cfg(test)
-fun showTriple t =
-  match t with
-  | (x, y, z) -> "${x} ${boolText y} ${z}"
+fun showTriple t = match t with | (x, y, z) -> "${x} ${boolText y} ${z}"
 
 @cfg(test)
 fun showNested vv = S.join ";" (V.map (\v -> S.join "," (V.map show v)) vv)
@@ -212,8 +206,7 @@ fun otherCase i =
     | 2 -> shown showResult (result int32 bool) (if flag then Ok a else Err odd)
     | 3 -> shown showTriple (tuple3 int32 bool uint8) (a, flag, c)
     | _ -> shown showNested (vector (vector uint8)) [[c, c / toUInt8 2], [], [c / toUInt8 3]]
-  in
-  ("${fst which} ${fst aText}", fst expected, got, snd expected)
+  in ("${fst which} ${fst aText}", fst expected, got, snd expected)
 
 -- --- the tester --------------------------------------------------------------------------
 
@@ -244,29 +237,30 @@ fun debugResult (r : TestResult) =
     match r.err with
     | Just m -> "Some(\"${m}\")"
     | None -> "None"
-  in
-  "TestResult { status: ${status}, arguments: [${arguments}], err: ${err} }"
+  in "TestResult { status: ${status}, arguments: [${arguments}], err: ${err} }"
 
 @cfg(test)
-fun pairShown t =
-  match t with
-  | (y, w) -> [show y, vecArg w]
+fun pairShown t = match t with | (y, w) -> [show y, vecArg w]
 
 @cfg(test)
 fun propertyFor which k x v =
   let vec = fixed v (vector int32) in
   let single = \test -> forAllShown vec (\w -> [vecArg w]) test in
-  let pair = \test -> forAllShown (tuple2 (fixed x int32) vec) pairShown (\t -> match t with | (y, w) -> test y w) in
-  match which with
-  | 0 -> single (\w -> fromBool (V.len w < k))
-  | 1 -> single (\w -> fromBool (sum64 w < k))
-  | 2 -> single (\w -> fromBool (V.all (\e -> toInt e < k) w))
-  | 3 -> single (\w -> fromBool (sortedAscending w))
-  | 4 -> single (\w -> fromBool (not (V.any (\e -> toInt e == k) w)))
-  | 5 -> single (\w -> if V.len w % 2 == 1 then discard else fromBool (sum64 w < k))
-  | 6 -> pair (\y w -> fromBool (toInt y + V.len w < k))
-  | 7 -> pair (\y w -> fromBool (V.all (\e -> e != y) w))
-  | _ -> forAllShown (fixed x int32) (\y -> [show y]) (\y -> if toInt y > k then error "too big: ${y}" else passed)
+  let pair =
+    \test ->
+      forAllShown (tuple2 (fixed x int32) vec) pairShown (\t -> match t with | (y, w) -> test y w)
+  in match which with
+     | 0 -> single (\w -> fromBool (V.len w < k))
+     | 1 -> single (\w -> fromBool (sum64 w < k))
+     | 2 -> single (\w -> fromBool (V.all (\e -> toInt e < k) w))
+     | 3 -> single (\w -> fromBool (sortedAscending w))
+     | 4 -> single (\w -> fromBool (not (V.any (\e -> toInt e == k) w)))
+     | 5 -> single (\w -> if V.len w % 2 == 1 then discard else fromBool (sum64 w < k))
+     | 6 -> pair (\y w -> fromBool (toInt y + V.len w < k))
+     | 7 -> pair (\y w -> fromBool (V.all (\e -> e != y) w))
+     | _ ->
+         forAllShown (fixed x int32) (\y -> [show y]) (\y ->
+           if toInt y > k then error "too big: ${y}" else passed)
 
 @cfg(test)
 fun testerOutcome which k x v =
@@ -302,11 +296,11 @@ fun runCase i =
 
 @cfg(test)
 fun check i n bad =
-  if i >= stringByteLength cases
-  then (n, bad)
+  if i >= stringByteLength cases then (n, bad)
   else
     match runCase i with
-    | (input, want, got, next) -> check next (n + 1) (if want == got then bad else V.pushBack bad (input, want, got))
+    | (input, want, got, next) ->
+        check next (n + 1) (if want == got then bad else V.pushBack bad (input, want, got))
 
 -- The number of cases, and the first few where the port differs.
 @cfg(test)
@@ -328,5 +322,6 @@ fun argumentsOf (r : TestResult) = r.arguments
     | Err r -> assertEq (argumentsOf r) ["[0, 0, 0]"] "shrunk to three zeros"
     | Ok n -> assertTrue False "the property should fail"
   in
-  let c = assertEq (V.len (takeShrinks 5 (shrinkOf int32 minInt32))) 5 "the least Int32 shrinks forever" in
-  withSeed 3 (\() -> quickcheck (forAll2 int int (\x y -> fromBool (x + y == y + x))))
+  let c =
+    assertEq (V.len (takeShrinks 5 (shrinkOf int32 minInt32))) 5 "the least Int32 shrinks forever"
+  in withSeed 3 (\() -> quickcheck (forAll2 int int (\x y -> fromBool (x + y == y + x))))
